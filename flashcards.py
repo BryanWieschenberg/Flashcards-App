@@ -7,7 +7,7 @@ pygame.init()
 root = tk.Tk()
 
 # Get screen dimensions
-WIDTH, HEIGHT = root.winfo_screenwidth(), root.winfo_screenheight()
+WIDTH, HEIGHT = root.winfo_screenwidth(), root.winfo_screenheight() # 800, 600  # 
 
 # Dark mode color scheme
 BG_COLOR = (30, 30, 30)          # Dark background
@@ -25,19 +25,13 @@ FONT = pygame.font.SysFont('Verdana', FONT_SIZE)
 LARGE_FONT = pygame.font.SysFont('Verdana', LARGE_FONT_SIZE)
 
 # Create screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Flashcard Program")
-
-# Flashcard data (key: term, value: definition)
-flashcards = {
-    "": ""
-}
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+pygame.display.set_caption("Flashcard App")
 
 # Settings - Show term or definition first?
 show_term_first = True  # User selection before starting
 
 # Flashcard mechanics
-cards = list(flashcards.items())  # Convert to a list of tuples
 needs_study = []  # Stores cards marked as "Needs to Study"
 mastered_count = 0  # Counter for mastered cards
 current_index = 0
@@ -52,6 +46,22 @@ CARD_WIDTH = int(WIDTH * 0.7)  # Increased from 0.5
 CARD_HEIGHT = int(HEIGHT * 0.5)  # Increased from 0.3
 CARD_X = (WIDTH - CARD_WIDTH) // 2
 CARD_Y = (HEIGHT - CARD_HEIGHT) // 2
+
+def update_sizes():
+    """Update all size variables based on current window dimensions"""
+    global FONT_SIZE, LARGE_FONT_SIZE, FONT, LARGE_FONT, CARD_WIDTH, CARD_HEIGHT, CARD_X, CARD_Y
+    
+    # Update font sizes
+    FONT_SIZE = int(HEIGHT * 0.02)
+    LARGE_FONT_SIZE = int(HEIGHT * 0.03)
+    FONT = pygame.font.SysFont('Verdana', FONT_SIZE)
+    LARGE_FONT = pygame.font.SysFont('Verdana', LARGE_FONT_SIZE)
+    
+    # Update card dimensions
+    CARD_WIDTH = int(WIDTH * 0.7)
+    CARD_HEIGHT = int(HEIGHT * 0.5)
+    CARD_X = (WIDTH - CARD_WIDTH) // 2
+    CARD_Y = (HEIGHT - CARD_HEIGHT) // 2
 
 def draw_text(text, x, y, color=TEXT_COLOR, large=False):
     """Helper function to draw centered text"""
@@ -99,6 +109,16 @@ def draw_wrapped_text(text, x, y, max_width, color=TEXT_COLOR, large=False):
         text_surface = font.render(line, True, color)
         text_rect = text_surface.get_rect(center=(x, start_y + i * line_height))
         screen.blit(text_surface, text_rect)
+
+def reset_study_session():
+    """Reset all study session variables except shuffle setting"""
+    global needs_study, mastered_count, current_index, flipped, status_message, status_timer
+    needs_study = []
+    mastered_count = 0
+    current_index = 0
+    flipped = False
+    status_message = ""
+    status_timer = 0
 
 def show_settings():
     """Settings menu to allow user to choose whether to show terms or definitions first"""
@@ -152,7 +172,7 @@ def draw_flashcard():
 
     if current_index >= len(cards):
         draw_text("Review Complete!", WIDTH // 2, HEIGHT // 2, large=True)
-        draw_text("Press ESC to Exit", WIDTH // 2, HEIGHT // 2 + int(HEIGHT * 0.1))
+        draw_text("Press ENTER to Return to Menu or ESC to Exit", WIDTH // 2, HEIGHT // 2 + int(HEIGHT * 0.1))
         pygame.display.flip()
         return
     
@@ -189,70 +209,104 @@ def draw_flashcard():
         draw_text(status_message, WIDTH // 2, CARD_Y + CARD_HEIGHT + int(HEIGHT * 0.1), status_color)
     
     # Draw instructions at bottom center
-    instruction_text = "[SPACE/UP/DOWN] Flip Card   |   [LEFT] Needs Study   |   [RIGHT] Understood"
+    instruction_text = "[SPACE/UP/DOWN] Flip Card   |   [LEFT] Need to Study   |   [RIGHT] Mastered   |   [ESC] Main Menu"
     draw_text(instruction_text, WIDTH // 2, HEIGHT - int(HEIGHT * 0.05))
 
 def main():
     """Main function handling game loop"""
     global current_index, flipped, status_message, status_color, status_timer, mastered_count
+    global WIDTH, HEIGHT, screen  # Add these globals at the beginning of the function
+    global cards
 
-    show_settings()  # Ask for user preference
-    
-    if shuffle_enabled:
-        random.shuffle(cards)
-
-    running = True
-    clock = pygame.time.Clock()
-    
-    while running:
-        screen.fill(BG_COLOR)
-        draw_flashcard()
-        pygame.display.flip()
+    # Main app loop
+    main_running = True
+    while main_running:
+        # Reset study session variables
+        reset_study_session()
         
-        # Update status message timer
-        if status_timer > 0:
-            status_timer -= 1
-            if status_timer == 0:
-                status_message = ""
+        # Show settings menu
+        show_settings()  
+        
+        # Prepare the cards
+        # Setup cards list from flashcards dictionary
+        cards = list(flashcards.items())
+        
+        if shuffle_enabled:
+            random.shuffle(cards)
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+        # Study session loop
+        study_running = True
+        clock = pygame.time.Clock()
+        
+        while study_running:
+            screen.fill(BG_COLOR)
+            draw_flashcard()
+            pygame.display.flip()
+            
+            # Update status message timer
+            if status_timer > 0:
+                status_timer -= 1
+                if status_timer == 0:
+                    status_message = ""
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     pygame.quit()
                     root.destroy()
                     exit()
-                elif current_index >= len(cards):  # If all cards are reviewed
-                    continue
-                elif event.key in (pygame.K_SPACE, pygame.K_UP, pygame.K_DOWN):
-                    flipped = not flipped  # Flip the card
-                elif event.key == pygame.K_LEFT:  # Mark as "Needs Study"
-                    needs_study.append(cards[current_index])
-                    status_message = "Needs Study"
-                    status_color = RED
-                    status_timer = 60  # Reduced from 60 to 30
-                    current_index += 1
-                    flipped = False
-                elif event.key == pygame.K_RIGHT:  # Mark as "Understood"
-                    status_message = "Mastered!"
-                    status_color = GREEN
-                    status_timer = 60  # Reduced from 60 to 30
-                    mastered_count += 1  # Increment mastery counter
-                    current_index += 1
-                    flipped = False
+                elif event.type == pygame.VIDEORESIZE:
+                    WIDTH, HEIGHT = event.size
+                    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+                    update_sizes()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        # Return to settings menu instead of exiting
+                        study_running = False
+                    elif current_index >= len(cards):  # If all cards are reviewed
+                        if event.key == pygame.K_RETURN:
+                            # Return to settings menu when ENTER is pressed at completion screen
+                            study_running = False
+                    else:
+                        if event.key in (pygame.K_SPACE, pygame.K_UP, pygame.K_DOWN):
+                            flipped = not flipped  # Flip the card
+                        elif event.key == pygame.K_LEFT:  # Mark as "Needs Study"
+                            needs_study.append(cards[current_index])
+                            status_message = "Need to Study"
+                            status_color = RED
+                            status_timer = 60
+                            current_index += 1
+                            flipped = False
+                        elif event.key == pygame.K_RIGHT:  # Mark as "Understood"
+                            status_message = "Mastered!"
+                            status_color = GREEN
+                            status_timer = 60
+                            mastered_count += 1  # Increment mastery counter
+                            current_index += 1
+                            flipped = False
 
-        # Restart with the "Needs Study" stack if first pass is complete
-        if current_index >= len(cards) and needs_study:
-            cards[:] = needs_study
-            needs_study.clear()
-            current_index = 0
-            mastered_count = 0  # Reset mastery counter for the review round
-            
-        clock.tick(60)  # Limit to 60 frames per second
-
-    pygame.quit()
-    root.destroy()
+            # Restart with the "Needs Study" stack if first pass is complete
+            if current_index >= len(cards) and needs_study:
+                cards[:] = needs_study
+                needs_study.clear()
+                current_index = 0
+                mastered_count = 0  # Reset mastery counter for the review round
+                
+            # Check if all cards are mastered and no cards need study
+            if current_index >= len(cards) and not needs_study:
+                # Wait for user to press ENTER or ESC
+                # The actual return to menu happens in the event handler above
+                pass
+                
+            clock.tick(60)  # 60 FPS
 
 if __name__ == "__main__":
+    
+    # --- INPUT FLASHCARDS SET BELOW ---
+    
+    flashcards = {
+        "": ""
+    }
+
+    # --- INPUT FLASHCARDS SET ABOVE ---
+
     main()
