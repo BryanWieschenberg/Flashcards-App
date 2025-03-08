@@ -33,6 +33,7 @@ show_term_first = True  # User selection before starting
 
 # Flashcard mechanics
 needs_study = []  # Stores cards marked as "Needs to Study"
+mastered_cards = []  # Track which cards have been mastered
 mastered_count = 0  # Counter for mastered cards
 current_index = 0
 flipped = False
@@ -112,8 +113,9 @@ def draw_wrapped_text(text, x, y, max_width, color=TEXT_COLOR, large=False):
 
 def reset_study_session():
     """Reset all study session variables except shuffle setting"""
-    global needs_study, mastered_count, current_index, flipped, status_message, status_timer
+    global needs_study, mastered_cards, mastered_count, current_index, flipped, status_message, status_timer
     needs_study = []
+    mastered_cards = []  # Reset the list of mastered cards
     mastered_count = 0
     current_index = 0
     flipped = False
@@ -172,7 +174,7 @@ def draw_flashcard():
 
     if current_index >= len(cards):
         draw_text("Review Complete!", WIDTH // 2, HEIGHT // 2, large=True)
-        draw_text("Press ENTER to Return to Menu or ESC to Exit", WIDTH // 2, HEIGHT // 2 + int(HEIGHT * 0.1))
+        draw_text("Press ESC to Return to Main Menu", WIDTH // 2, HEIGHT // 2 + int(HEIGHT * 0.1))
         pygame.display.flip()
         return
     
@@ -180,8 +182,9 @@ def draw_flashcard():
     counter_text = f"Card {current_index + 1}/{len(cards)}"
     draw_text(counter_text, WIDTH // 2, int(HEIGHT * 0.08))
     
-    # Draw mastery counter
-    mastery_text = f"Mastered {mastered_count}/{current_index}"
+    # Draw mastery counter - show correctly how many of the viewed cards have been mastered
+    viewed_cards = min(current_index, len(cards))
+    mastery_text = f"Mastered {mastered_count}/{viewed_cards}"
     draw_text(mastery_text, WIDTH // 2, int(HEIGHT * 0.15), GREEN)
     
     term, definition = cards[current_index]
@@ -209,14 +212,14 @@ def draw_flashcard():
         draw_text(status_message, WIDTH // 2, CARD_Y + CARD_HEIGHT + int(HEIGHT * 0.1), status_color)
     
     # Draw instructions at bottom center
-    instruction_text = "[SPACE/UP/DOWN] Flip Card   |   [LEFT] Need to Study   |   [RIGHT] Mastered   |   [ESC] Main Menu"
+    instruction_text = "[SPACE/UP/DOWN] Flip Card   |   [LEFT] Need to Study   |   [RIGHT] Mastered   |   [BACKSPACE] Previous Card   |   [ESC] Main Menu"
     draw_text(instruction_text, WIDTH // 2, HEIGHT - int(HEIGHT * 0.05))
 
 def main():
     """Main function handling game loop"""
     global current_index, flipped, status_message, status_color, status_timer, mastered_count
     global WIDTH, HEIGHT, screen  # Add these globals at the beginning of the function
-    global cards
+    global cards, mastered_cards
 
     # Main app loop
     main_running = True
@@ -274,15 +277,37 @@ def main():
                             status_message = "Need to Study"
                             status_color = RED
                             status_timer = 60
+                            
+                            # If this card was previously mastered, remove from mastered list
+                            if current_index in mastered_cards:
+                                mastered_cards.remove(current_index)
+                                mastered_count -= 1
+                                
                             current_index += 1
                             flipped = False
                         elif event.key == pygame.K_RIGHT:  # Mark as "Understood"
                             status_message = "Mastered!"
                             status_color = GREEN
                             status_timer = 60
-                            mastered_count += 1  # Increment mastery counter
+                            
+                            # Only increment if this card wasn't already mastered
+                            if current_index not in mastered_cards:
+                                mastered_cards.append(current_index)
+                                mastered_count += 1  # Increment mastery counter
+                                
                             current_index += 1
                             flipped = False
+                        elif event.key == pygame.K_BACKSPACE:  # Go back to previous card
+                            if current_index > 0:
+                                current_index -= 1
+                                flipped = False
+                                status_message = "Previous Card"
+                                status_color = LIGHT_BLUE
+                                status_timer = 60
+                                # No need to adjust mastered_count here - we track it per card now
+                                if current_index in mastered_cards:
+                                    mastered_cards.remove(current_index)
+                                    mastered_count -= 1
 
             # Restart with the "Needs Study" stack if first pass is complete
             if current_index >= len(cards) and needs_study:
@@ -290,6 +315,7 @@ def main():
                 needs_study.clear()
                 current_index = 0
                 mastered_count = 0  # Reset mastery counter for the review round
+                mastered_cards = []  # Reset the mastered cards list
                 
             # Check if all cards are mastered and no cards need study
             if current_index >= len(cards) and not needs_study:
@@ -298,15 +324,15 @@ def main():
                 pass
                 
             clock.tick(60)  # 60 FPS
-
+            
 if __name__ == "__main__":
     
     # --- INPUT FLASHCARDS SET BELOW ---
-    
+
     flashcards = {
         "": ""
     }
-
+    
     # --- INPUT FLASHCARDS SET ABOVE ---
 
     main()
