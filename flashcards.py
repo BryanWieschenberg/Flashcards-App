@@ -27,25 +27,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Flashcard Program")
 
 # Flashcard data (key: term, value: definition)
+
+# --- FILL IN TERMS AND DEFINITIONS TO STUDY ---
 flashcards = {
-    "Python": "A high-level, interpreted programming language",
-    "Java": "A class-based, object-oriented programming language",
-    "C++": "A general-purpose programming language",
-    "JavaScript": "A high-level, interpreted programming language",
-    "HTML": "Standard markup language for documents",
-    "CSS": "Style sheet language used for describing the presentation of a document",
-    "SQL": "Language used to communicate with databases",
-    "API": "Application Programming Interface",
-    "GUI": "Graphical User Interface",
-    "IDE": "Integrated Development Environment",
-    "OOP": "Object-Oriented Programming",
-    "CLI": "Command Line Interface",
-    "URL": "Uniform Resource Locator",
-    "HTTP": "Hypertext Transfer Protocol",
-    "HTTPS": "Hypertext Transfer Protocol Secure",
-    "FTP": "File Transfer Protocol",
-    "SSH": "Secure Shell",
-    "DNS": "Domain Name System"
+    "": "",
+    "": ""
 }
 
 # Settings - Show term or definition first?
