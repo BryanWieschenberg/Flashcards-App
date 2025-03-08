@@ -188,7 +188,7 @@ def draw_flashcard():
         draw_text(status_message, WIDTH // 2, CARD_Y + CARD_HEIGHT + int(HEIGHT * 0.1), status_color)
     
     # Draw instructions at bottom center
-    instruction_text = "[SPACE] Flip Card | [←] Needs Study | [→] Understood"
+    instruction_text = "[SPACE/UP/DOWN] Flip Card | [LEFT] Needs Study | [LEFT] Understood"
     draw_text(instruction_text, WIDTH // 2, HEIGHT - int(HEIGHT * 0.05))
 
 def main():
