@@ -17,10 +17,10 @@ GREEN = (50, 205, 50)
 RED = (220, 20, 60)
 
 # Set font size proportional to screen height - made larger
-FONT_SIZE = int(HEIGHT * 0.04)  # Increased from 0.03
-LARGE_FONT_SIZE = int(HEIGHT * 0.06)  # Larger font for card content
-FONT = pygame.font.SysFont(None, FONT_SIZE)
-LARGE_FONT = pygame.font.SysFont(None, LARGE_FONT_SIZE)
+FONT_SIZE = int(HEIGHT * 0.02)  # Increased from 0.03
+LARGE_FONT_SIZE = int(HEIGHT * 0.03)  # Larger font for card content
+FONT = pygame.font.SysFont('Verdana', FONT_SIZE)
+LARGE_FONT = pygame.font.SysFont('Verdana', LARGE_FONT_SIZE)
 
 # Create screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
