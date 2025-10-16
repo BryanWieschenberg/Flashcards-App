@@ -10,6 +10,7 @@ root = tk.Tk()
 WIDTH, HEIGHT = root.winfo_screenwidth(), root.winfo_screenheight()
 
 BG_COLOR = (30, 30, 30)
+TEXTBOX_COLOR = (40, 40, 40)
 TEXT_COLOR = (255, 255, 255)
 BORDER_COLOR = (200, 200, 200)
 GREEN = (50, 205, 50)
@@ -174,6 +175,7 @@ def draw_flashcard():
     else:
         text = definition if not flipped else term
 
+    pygame.draw.rect(screen, TEXTBOX_COLOR, (CARD_X + 3, CARD_Y + 3, CARD_WIDTH - 6, CARD_HEIGHT - 6))
     pygame.draw.rect(screen, BORDER_COLOR, (CARD_X, CARD_Y, CARD_WIDTH, CARD_HEIGHT), 3)
     
     draw_wrapped_text(text, WIDTH // 2, CARD_Y + CARD_HEIGHT // 2, CARD_WIDTH - 40, TEXT_COLOR, large=True)
